@@ -1,0 +1,25 @@
+{
+    "users": {
+        "Directeur G\u00e9n\u00e9ral": {
+            "password": "73e675be8cc2db1eef39ec55dcaf298407c15e13e621ced5a4d4277496c0af1b",
+            "status": "Administrateur",
+            "email": "Directeur G\u00e9n\u00e9ral@example.com",
+            "created_at": "2026-02-20 08:52:48",
+            "active": true
+        },
+        "Directeur Etude": {
+            "password": "812e8af1fdb6e681bf25e40d1665e07b07b17ddafd57bfba25dc7f513d42aed0",
+            "status": "Administrateur",
+            "email": "Directeur Etude@example.com",
+            "created_at": "2026-02-20 08:52:48",
+            "active": true
+        },
+        "Concepteur": {
+            "password": "80554bca428d3d7964c5e0e2a15a318b177d2d0ecb4c1ef646d47c9c3a9277a2",
+            "status": "Administrateur",
+            "email": "Concepteur@example.com",
+            "created_at": "2026-02-20 08:52:48",
+            "active": true
+        }
+    }
+}
