@@ -78,7 +78,7 @@ def load_excel_data():
         return pd.DataFrame(), pd.DataFrame()
 
 def save_evaluation_to_excel(evaluation_data, student_data):
-    """Sauvegarde l'évaluation et les données étudiant dans le fichier Excel"""
+    """Sauvegarde l'évaluation et les données étudiant dans le fichier Excel et Supabase"""
     try:
         # Lire les données existantes
         student_eval = pd.read_excel("Data.xlsx", sheet_name="Student")
@@ -119,6 +119,14 @@ def save_evaluation_to_excel(evaluation_data, student_data):
             }
             labels_df = pd.DataFrame(list(question_dict.items()), columns=['Code', 'Question'])
             labels_df.to_excel(writer, sheet_name='Labels', index=False)
+        
+        # Sauvegarder dans Supabase
+        # Insérer l'étudiant
+        nom_complet = f"{student_data['Nom']}"
+        insert_student_to_supabase(student_data['Classe'], nom_complet, student_data['Sexe'], student_data['Matricule'],student_data['enseignant'],student_data['cours'])
+        
+        # Insérer l'évaluation
+        insert_evaluation_to_supabase(evaluation_data, student_data['Matricule'])
         
         return True
     except Exception as e:
@@ -269,24 +277,21 @@ if 'student_authenticated' not in st.session_state:
 if 'authenticated_student' not in st.session_state:
     st.session_state.authenticated_student = {'nom': '', 'matricule': '', 'prenom': '', 'classe': '', 'sexe': ''}
 
-
-st.write("## 📝 Formulaire d'évaluation des enseignants")
+st.write("## :material/edit_document: Formulaire d'évaluation des enseignants")
 
 # ==================== AUTHENTIFICATION ÉTUDIANT ====================
 if not st.session_state.student_authenticated:
-    st.markdown("### 🔐 Authentification")
+    st.markdown("### :material/key: Authentification")
     st.info("Veuillez entrer vos informations pour accéder au formulaire d'évaluation")
     
     col1, col2 = st.columns(2)
     with col1:
-        auth_nom = st.text_input("Votre Nom", placeholder="Entrez votre nom")
-    with col2:
         auth_matricule = st.text_input("Votre Matricule", placeholder="Entrez votre matricule")
+    with col2:
+        pass
     
-    if st.button("🔓 Accéder au formulaire", use_container_width=True):
-        if auth_nom == "":
-            st.error("⚠️ Veuillez entrer votre nom")
-        elif auth_matricule == "":
+    if st.button("Accéder au formulaire", use_container_width=True, icon=":material/key:"):
+        if auth_matricule == "":
             st.error("⚠️ Veuillez entrer votre matricule")
         else:
             try:
@@ -295,34 +300,38 @@ if not st.session_state.student_authenticated:
                     st.error("⚠️ Votre matricule n'est pas valide. Veuillez vérifier sur la fiche de présence de votre classe.")
                 else:
                     # Vérifier si l'étudiant a déjà complété ses évaluations
-                    if not student_eval.empty and matricule_int in student_eval["Matricule"].values:
-                        st.warning(f"⚠️ Vous avez déjà complété vos évaluations. Si ce n'est pas vous, rassurez-vous que votre matricule est correct.")
-                    else:
-                        st.session_state.student_authenticated = True
-                        st.session_state.authenticated_student = {
-                            'nom': auth_nom,
+                    #if not student_eval.empty and matricule_int in student_eval["Matricule"].values:
+                        #st.warning(f"⚠️ Vous avez déjà complété vos évaluations. Si ce n'est pas vous, rassurez-vous que votre matricule est correct.")
+                    #else:
+                    st.session_state.student_authenticated = True
+                    st.session_state.authenticated_student = {
+                            'nom': dico_etudiant[matricule_int][0] if matricule_int in dico_etudiant else '',
                             'matricule': matricule_int,
                             'prenom': dico_etudiant[matricule_int][0] if matricule_int in dico_etudiant else '',
                             'classe': '',
                             'sexe': ''
                         }
-                        st.rerun()
+                    st.rerun()
             except ValueError:
                 st.error("⚠️ Le matricule doit être un nombre")
     
     st.stop()
 
 # ==================== FORMULAIRE D'ÉVALUATION ====================
+students_df = load_students_from_supabase()
+students_df=students_df[['matricule', 'nom', 'classe', 'sexe','enseignant', 'cours']]
+user_df = students_df[students_df['matricule'] == str(st.session_state.authenticated_student['matricule'])]
+st.session_state.evaluated_teachers = user_df["enseignant"].unique().tolist()
 st.write("### Informations de l'étudiant")
 col1, col2 = st.columns(2)
 
 with col1:
-    classe_selectionnee = st.selectbox("Classe", [""] + list(nested_dict.keys()), index=0)
-    st.write(f"**Matricule:** {st.session_state.authenticated_student['matricule']}")
+    c="#083eee"
+    st.markdown(f"### **Matricule:** <span style='color: #083eee;'>{st.session_state.authenticated_student['matricule']}</span>", unsafe_allow_html=True)
+    nom_etudiant = st.text_input("Nom", value=st.session_state.authenticated_student['nom'])
     
 with col2:
-    nom_etudiant = st.text_input("Nom", value=st.session_state.authenticated_student['nom'])
-    prenom_etudiant = st.text_input("Prénom", value=st.session_state.authenticated_student['prenom'])
+    classe_selectionnee = st.selectbox("Classe", [dico_etudiant[st.session_state.authenticated_student['matricule']][1]] + list(nested_dict.keys()), index=0)
 
 sexe = st.radio("Sexe", ["", "Masculin", "Féminin"], index=0, horizontal=True)
 
@@ -339,10 +348,10 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
     
     # Progress section
     st.write("---")
-    st.write("### 📊 Progression de vos évaluations")
+    st.write("### :material/trending_up: Progression de vos évaluations")
     
     # Calculate evaluated and remaining teachers
-    evaluated_count = len(st.session_state.evaluated_teachers)
+    evaluated_count = user_df.shape[0]
     remaining_count = total_teachers - evaluated_count
     
     # Progress bar
@@ -358,17 +367,17 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
         if st.session_state.evaluated_teachers:
             evaluated_df = pd.DataFrame([
                 {"Enseignant": ens, "Cours": nested_dict[classe_selectionnee][ens]}
-                for ens in st.session_state.evaluated_teachers
+                for ens in user_df["enseignant"].unique() if ens in user_df["enseignant"].unique()
             ])
             st.dataframe(evaluated_df, hide_index=True, use_container_width=True)
         else:
             st.info("Aucun enseignant évalué pour le moment")
     
     with col2:
-        st.write("#### ⏳ Enseignants restants à évaluer")
+        st.write("#### :material/hourglass_top: Enseignants restants à évaluer")
         remaining_teachers = [
             (ens, cours) for ens, cours in teachers_list 
-            if ens not in st.session_state.evaluated_teachers
+            if ens not in user_df["enseignant"].unique()
         ]
         if remaining_teachers:
             remaining_df = pd.DataFrame([
@@ -383,7 +392,7 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
     
     # Select teacher to evaluate
     if remaining_teachers:
-        st.write("### 📚 Sélectionnez un enseignant à évaluer")
+        st.write("### :material/check_circle: Sélectionnez un enseignant à évaluer")
         
         teacher_options = [f"{ens} - {cours}" for ens, cours in remaining_teachers]
         selected_teacher_full = st.selectbox("Enseignant", teacher_options)
@@ -393,7 +402,8 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
         cours_selectionne = nested_dict[classe_selectionnee][enseignant_selectionne]
         
         st.write("---")
-        st.write(f"### 📖 Évaluation de **{enseignant_selectionne}** pour le cours de **{cours_selectionne}**")
+        st.write(f"### Évaluation de <span style='color: #0066cc;'>**{enseignant_selectionne}**</span> pour le cours de <span style='color: #f39c12;'>*{cours_selectionne}*</span>", unsafe_allow_html=True)
+        #st.write(f"### :material/book: Évaluation de **{enseignant_selectionne}** pour le cours de **{cours_selectionne}**")
         
         # Evaluation form for single teacher
         with st.form("Evaluation_Form"):
@@ -454,7 +464,7 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
             # Submit button
             col1, col2, col3 = st.columns([1, 1, 1])
             with col2:
-                submitted = st.form_submit_button("✅ Soumettre cette évaluation", use_container_width=True)
+                submitted = st.form_submit_button(" Soumettre cette évaluation", use_container_width=True, icon=":material/send:")
             
             if submitted:
                 # Check for missing responses
@@ -501,11 +511,12 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
                     student_data = {
                         "Classe": classe_selectionnee,
                         "Nom": nom_etudiant,
-                        "Prénom": prenom_etudiant,
+                        "Prénom": pre_nom,
                         "Sexe": sexe,
                         "Matricule": matricule,
                         "Date": current_date,
-                        "Enseignant": enseignant_selectionne
+                        "enseignant": enseignant_selectionne,
+                        "cours": cours_selectionne
                     }
                     
                     # Save to Excel
@@ -524,11 +535,13 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
                             # Reset session state
                             st.session_state.student_authenticated = False
                             st.session_state.evaluated_teachers = []
-                            time.sleep(2)
-                            st.rerun()
+                            if st.button("Poursuivre", use_container_width=True, icon=":material/refresh:"):
+                                st.form_submit_button("Poursuivre", use_container_width=True, icon=":material/refresh:")
+                                st.rerun()
                         else:
                             st.info(f"Il vous reste {total_teachers - len(st.session_state.evaluated_teachers)} enseignant(s) à évaluer.")
-                            st.rerun()
+                            if st.form_submit_button("Poursuivre", use_container_width=True, icon=":material/refresh:"):
+                                st.rerun()
                     else:
                         st.error("❌ Erreur lors de la sauvegarde des données")
                 else:

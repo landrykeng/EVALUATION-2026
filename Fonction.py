@@ -16,8 +16,11 @@ import hashlib
 import json
 import os
 from datetime import datetime, timedelta
+from supabase import create_client, Client
 
-
+SUPABASE_URL = "https://pjjcxvpfhewnbwuvmhpe.supabase.co"
+SUPABASE_API = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqamN4dnBmaGV3bmJ3dXZtaHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzE5MjcsImV4cCI6MjA4ODQ0NzkyN30.VwSd8rWXO2eO5NTvXBxQD9YLjh4xo4lOcrTkma8Z9lc"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_API)
 
 def hash_password(password):
     """Hash un mot de passe pour un stockage sécurisé"""
@@ -202,7 +205,7 @@ def authentication_system():
             username = st.text_input("Nom d'utilisateur", key="login_username")
             password = st.text_input("Mot de passe", type="password", key="login_password")
             
-            if st.button("Se connecter"):
+            if st.button("Se connecter", icon=":material/login:"):
                 if check_credentials(username, password):
                     st.session_state["authenticated"] = True
                     st.session_state["username"] = username
@@ -917,3 +920,88 @@ def generate_word_cloud(df, column_name, max_words=100, min_frequency=3,
     
     # Afficher le nuage de mots dans Streamlit
     st_echarts(options=options, height=height, width=width)
+
+# ==================== SUPABASE FUNCTIONS ====================
+
+def insert_student_to_supabase(classe, nom, sexe, matricule, enseignant, cours):
+    """Insère un étudiant dans la table Supabase students"""
+    try:
+        data = {
+            "classe": classe,
+            "nom": nom,
+            "sexe": sexe,
+            "matricule": matricule,
+            "enseignant": enseignant,  
+            "cours": cours  
+        }
+        response = supabase.table("students").insert(data).execute()
+        return True
+    except Exception as e:
+        st.error(f"Erreur lors de l'insertion dans Supabase: {e}")
+        return False
+
+def insert_evaluation_to_supabase(evaluation_data, matricule):
+    """Insère une évaluation dans la table Supabase evaluations"""
+    try:
+        # Mapper les données
+        data = {
+            "classe": evaluation_data["Classe"],
+            "date": evaluation_data["Date"],
+            "enseignant": evaluation_data["Enseignant"],
+            "cours": evaluation_data["Cours"],
+            "q_01": evaluation_data.get("Q_01"),
+            "q_02": evaluation_data.get("Q_02"),
+            "q_03": evaluation_data.get("Q_03"),
+            "q_04": evaluation_data.get("Q_04"),
+            "q_05": evaluation_data.get("Q_05"),
+            "q_06": evaluation_data.get("Q_06"),
+            "q_07": evaluation_data.get("Q_07"),
+            "q_08": evaluation_data.get("Q_08"),
+            "q_09": evaluation_data.get("Q_09"),
+            "q_10": evaluation_data.get("Q_10"),
+            "q_11": evaluation_data.get("Q_11"),
+            "q_12": evaluation_data.get("Q_12"),
+            "q_13": evaluation_data.get("Q_13"),
+            "q_14": evaluation_data.get("Q_14"),
+            "q_15": evaluation_data.get("Q_15"),
+            "q_16": evaluation_data.get("Q_16"),
+            "q_17": evaluation_data.get("Q_17"),
+            "q_18": evaluation_data.get("Q_18"),
+            "q_19": evaluation_data.get("Q_19", ""),
+            "q_20": evaluation_data.get("Q_20", ""),
+            "q_21": evaluation_data.get("Q_21", "")
+        }
+        response = supabase.table("evaluations").insert(data).execute()
+        return True
+    except Exception as e:
+        st.error(f"Erreur lors de l'insertion de l'évaluation dans Supabase: {e}")
+        return False
+
+def load_students_from_supabase():
+    """Charge les étudiants depuis Supabase"""
+    try:
+        response = supabase.table("students").select("*").execute()
+        df = pd.DataFrame(response.data)
+        return df
+    except Exception as e:
+        st.error(f"Erreur lors du chargement des étudiants depuis Supabase: {e}")
+        return pd.DataFrame()
+
+def load_evaluations_from_supabase():
+    """Charge les évaluations depuis Supabase"""
+    try:
+        response = supabase.table("evaluations").select("*").execute()
+        df = pd.DataFrame(response.data)
+        # Renommer les colonnes pour correspondre à l'ancien format
+        df = df.rename(columns={
+            "q_01": "Q_01", "q_02": "Q_02", "q_03": "Q_03", "q_04": "Q_04",
+            "q_05": "Q_05", "q_06": "Q_06", "q_07": "Q_07", "q_08": "Q_08",
+            "q_09": "Q_09", "q_10": "Q_10", "q_11": "Q_11", "q_12": "Q_12",
+            "q_13": "Q_13", "q_14": "Q_14", "q_15": "Q_15", "q_16": "Q_16",
+            "q_17": "Q_17", "q_18": "Q_18", "q_19": "Q_19", "q_20": "Q_20",
+            "q_21": "Q_21"
+        })
+        return df
+    except Exception as e:
+        st.error(f"Erreur lors du chargement des évaluations depuis Supabase: {e}")
+        return pd.DataFrame()

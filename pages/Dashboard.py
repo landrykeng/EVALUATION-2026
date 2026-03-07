@@ -13,15 +13,35 @@ import google.generativeai as genai
 
 # ==================== CHARGEMENT DES DONNÉES DEPUIS EXCEL ====================
 
+
+
 def load_data_from_excel():
-    """Charge les données depuis le fichier Data.xlsx"""
+    """Charge les données depuis Supabase"""
     try:
-        if os.path.exists("Data.xlsx"):
-            student_eval = pd.read_excel("Data.xlsx", sheet_name="Student")
-            data_eval = pd.read_excel("Data.xlsx", sheet_name="Evaluations")
-            return student_eval, data_eval
-        else:
-            return pd.DataFrame(), pd.DataFrame()
+        students_df = load_students_from_supabase()
+        evaluations_df = load_evaluations_from_supabase()
+        
+        # Fusionner pour créer student_eval similaire à Excel Student sheet
+        # evaluations_df a matricule, classe, date, enseignant
+        # students_df a matricule, classe, nom, sexe
+        # Supposons nom est "Nom Prénom"
+        
+        
+        students_df[['Nom', 'Prénom']] = students_df['nom'].str.split(' ', n=1, expand=True)
+        students_df = students_df.rename(columns={'nom': 'Nom_complet'})
+        
+        student_eval = students_df
+        
+        
+        data_eval = evaluations_df.rename(columns={
+            'matricule': 'Matricule',
+            'classe': 'Classe',
+            'date': 'Date',
+            'enseignant': 'Enseignant',
+            'cours': 'Cours'
+        })
+        
+        return student_eval, data_eval
     except Exception as e:
         st.error(f"Erreur lors du chargement des données: {e}")
         return pd.DataFrame(), pd.DataFrame()
@@ -105,29 +125,42 @@ with head[2]:
 
 # ==================== VUE D'ENSEMBLE ====================
 
-st.markdown("## 📊 Vue d'ensemble")
+st.markdown("## :material/trending_up: Vue d'ensemble")
 
 try:
     etudiant = pd.read_excel("Base.xlsx", sheet_name="Liste")
     df_classes = pd.read_excel('Base.xlsx', sheet_name="Classification")
-    total_evals = len(student_eval)
-    total_students = len(etudiant)
-    global_progress = total_evals / total_students if total_students > 0 else 0
+    
+    #tableau contenant le maritcule, le nom, classe,nombre de matière de sa classe
+    matieres_par_classe = df_classes.groupby("Classe")["Cours"].nunique()
+    matieres_dict = matieres_par_classe.to_dict()
+    df_all=etudiant
+    df_all["Nombre de matières"] = df_all["Classe"].map(matieres_dict)
+    
+    df_all["Matricule"] = df_all["Matricule"].astype(str)
+    # dictionnaire du nombre de matière évalué par étudiant
+    eval_counts = student_eval.groupby("matricule").size().to_dict()
+    df_all["Nombre de matières évaluées"] = df_all["Matricule"].map(eval_counts).fillna(0).astype(int)
+    df_all["Progression"] = df_all.apply(lambda row: 100*row["Nombre de matières évaluées"] / row["Nombre de matières"] if row["Nombre de matières"] > 0 else 0, axis=1)
+    global_progress = df_all["Nombre de matières évaluées"].sum() / df_all["Nombre de matières"].sum() if df_all["Nombre de matières"].sum() > 0 else 0
     
     progrss = st.columns(2)
     with progrss[0]:
-        make_progress_char(global_progress, couleur="#BB4415", titre=f"Progression globale: {global_progress*100:.1f}%")
+        make_progress_char(global_progress, couleur="#BB4415", titre=f"Progression globale")
     
     with progrss[1]:
-        class_lists = {}
-        for classe in etudiant["Classe"].unique():
-            class_students = len(etudiant[etudiant["Classe"] == classe])
-            class_evals = len(student_eval[student_eval["Classe"] == classe]) if not student_eval.empty else 0
-            progress = class_evals / class_students if class_students > 0 else 0
-            class_lists[classe] = progress
+        #Tableau de la progression par classe
+        class_progress = df_all.groupby("Classe").agg({"Nombre de matières": "sum", "Nombre de matières évaluées": "sum"})
+        class_progress["Classe"] = class_progress.index
+        class_progress = class_progress.reset_index(drop=True)
+        class_progress=class_progress.rename(columns={"Nombre de matières": "Total evaluation", "Nombre de matières évaluées": "Total évaluées"})
+        class_progress["Progression"] = class_progress["Total évaluées"] / class_progress["Total evaluation"]
+        class_progress=class_progress[["Classe", "Total evaluation", "Total évaluées", "Progression"]]
         
-        make_multi_progress_bar(list(class_lists.keys()), list(class_lists.values()), 
-                               titre="Progression par classe", colors=colors_palette, height=400)
+        colors_palette_class = [f"rgb({int(0)}, {int(1 + i*10)}, {int(255)})" for i in range(len(class_progress))]
+        
+        make_multi_progress_bar(labels=class_progress["Classe"], values=class_progress["Progression"], 
+                               titre="Progression par classe", colors=colors_palette_class, height=400)
         
     # tableau croisé de toutes les reponses par modalité
     cross_all = pd.DataFrame()
@@ -145,34 +178,23 @@ try:
     cl=st.columns(2)
     with cl[0]:
         make_st_heatmap_echat2(cross_all, cle="heatmap_overview2", title="Distribution globale (%) des réponses par question")
+        labels_df = pd.DataFrame(list(question_dict.items()), columns=['Code', 'Question'])
         with st.expander("Labels des questions"):
-            labels_df = pd.DataFrame(list(question_dict.items()), columns=['Code', 'Question'])
             st.dataframe(labels_df, use_container_width=True, hide_index=True)
     with cl[1]:
         # calcul du nombre de matière par classe
         matieres_par_classe = df_classes.groupby("Classe")["Cours"].nunique()
         matieres_dict = matieres_par_classe.to_dict()
         
-        
-        # tAbleau du nombre de matière évalué par étudiant
-        matieres_par_classe = student_eval.groupby("Matricule").agg({"Enseignant": "size",
-                                                                "Classe": "first",
-                                                                "Nom": "first",
-                                                                "Prénom": "first",
-                                                                "Matricule": "count"})
-        matieres_par_classe.rename(columns={"Enseignant": "Nombre de matières évaluées",
-                                            "Matricule": "Nb évaluation",
-                                            "Classe": "Classe",
-                                            "Nom": "Nom",
-                                            "Prénom": "Prénom"},
-                                   inplace=True)
-        matieres_par_classe["Matricule"]=matieres_par_classe.index
-        matieres_par_classe=matieres_par_classe.reset_index(drop=True)
-        matieres_par_classe=matieres_par_classe[["Matricule", "Nom", "Prénom", "Classe", "Nb évaluation"]]
-        matieres_par_classe["Progression"] = matieres_par_classe.apply(lambda row: row["Nb évaluation"] / matieres_dict.get(row["Classe"], 1) if matieres_dict.get(row["Classe"], 1) > 0 else 0, axis=1)
         #Afficher le tableau avec la barre de progression dans la colonne "Progression"
         st.subheader("Progression individuelle des étudiants dans l'évaluation de leurs matières")
-        st.dataframe(matieres_par_classe, use_container_width=True, hide_index=True,
+        
+        choosed_class = st.selectbox("Sélectionner une classe pour voir la progression individuelle", ["Toutes"] + df_all["Classe"].unique().tolist(), key="class_progress_select")
+        df_all_ = df_all if choosed_class == "Toutes" else df_all[df_all["Classe"] == choosed_class]
+        
+        df_all_ = df_all_[["Matricule", "Nom", "Classe", "Progression"]]
+        df_all_["Progression"] = df_all_["Progression"] / 100
+        st.dataframe(df_all_, use_container_width=True, hide_index=True,
                      column_config={
                          "Progression": st.column_config.ProgressColumn("Progression", 
                                                                         help="Progression de l'étudiant dans l'évaluation de ses matières", 
@@ -183,6 +205,8 @@ try:
    
 except Exception as e:
     st.warning(f"Erreur lors du calcul de la progression: {e}")
+
+
 
 # ==================== ANALYSES DÉTAILLÉES ====================
 
@@ -236,6 +260,7 @@ with ligne1[1]:
     except Exception as e:
         st.warning(f"Erreur: {e}")
     with st.expander("Labels des questions"):
+        labels_df = pd.DataFrame(list(question_dict.items()), columns=['Code', 'Question'])
         st.dataframe(labels_df, use_container_width=True, hide_index=True)
 
 
@@ -366,25 +391,25 @@ with ligne3[0]:
 # ==================== EXPORT DES DONNÉES ====================
 
 st.markdown("---")
-st.markdown("## 📥 Export des données")
+st.markdown("## :material/download: Export des données")
 
 exp1, exp2 = st.columns(2)
 
 with exp1:
     st.markdown("### Étudiants")
     try:
-        if not student_eval.empty and "Classe" in student_eval.columns:
-            selected_class = st.multiselect("Classes", student_eval["Classe"].unique(), 
-                                          default=student_eval["Classe"].unique(), key="export_students")
-            filtered_students = student_eval[student_eval["Classe"].isin(selected_class)]
+        if not student_eval.empty and "classe" in student_eval.columns:
+            selected_class = st.multiselect("Classes", student_eval["classe"].unique(), 
+                                          default=student_eval["classe"].unique(), key="export_students")
+            filtered_students = student_eval[student_eval["classe"].isin(selected_class)]
             
-            if st.button("📥 Télécharger", key="download_students"):
+            if st.button("Télécharger", key="download_students",icon=":material/download:"):
                 output = io.BytesIO()
                 with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                     filtered_students.to_excel(writer, index=False, sheet_name="Étudiants")
                 output.seek(0)
                 st.download_button("Télécharger Excel", output, "etudiants.xlsx",
-                                 mime="application/vnd.ms-excel", key="btn_students")
+                                 mime="application/vnd.ms-excel", key="btn_students",icon=":material/download:")
     except Exception as e:
         st.warning(f"Erreur: {e}")
 
@@ -396,7 +421,7 @@ with exp2:
                                           default=data_eval["Classe"].unique(), key="export_evals")
             filtered_evals = data_eval[data_eval["Classe"].isin(selected_class)]
             
-            if st.button("📥 Télécharger", key="download_evals"):
+            if st.button("Télécharger", key="download_evals",icon=":material/download:"):
                 output = io.BytesIO()
                 labels = pd.DataFrame(list(question_dict.items()), columns=['Code', 'Question'])
                 with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
@@ -404,14 +429,14 @@ with exp2:
                     labels.to_excel(writer, index=False, sheet_name="Labels")
                 output.seek(0)
                 st.download_button("Télécharger Excel", output, "evaluations.xlsx",
-                                 mime="application/vnd.ms-excel", key="btn_evals")
+                                 mime="application/vnd.ms-excel", key="btn_evals",icon=":material/download:")
     except Exception as e:
         st.warning(f"Erreur: {e}")
 
 # ==================== AFFICHAGE DES DONNÉES ====================
 
 st.markdown("---")
-st.markdown("## 📊 Données détaillées")
+st.markdown("## :material/table_chart: Données détaillées")
 
 tab1, tab2 = st.tabs(["Étudiants", "Évaluations"])
 
