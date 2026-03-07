@@ -133,6 +133,60 @@ def save_evaluation_to_excel(evaluation_data, student_data):
         st.error(f"Erreur lors de la sauvegarde: {e}")
         return False
 
+# CSS personnalisé pour un design moderne et professionnel
+st.markdown("""
+    <style>
+    /* Importation de Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+    
+    /* Reset et styles de base */
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    
+    /* Masquer les éléments par défaut */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* En-tête vert style INS */
+    .top-header {
+        background: linear-gradient(90deg, #1e3a5f 0%, #2c5282 100%); 
+        padding: 1rem 2rem; 
+        border-bottom: 4px solid #f39c12;
+        margin-bottom: 2rem;'
+  
+        padding: 0.8rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin: -5rem -5rem 0 -5rem;
+        margin-bottom: 0;
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        font-size: 0.95rem;
+    }
+ 
+    </style>
+""", unsafe_allow_html=True)
+
+# En-tête supérieur vert
+st.markdown("""
+    <div class="top-header";>
+        <div style='display: flex; align-items: center; justify-content: space-between;'>
+            <h1 style='margin: 0; font-size: 1.2rem; font-weight: 500;'>
+                    EVALUATION DES ENSEIGNANTS DE LA FORMATION INITIALE
+            </h1>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
 
 with st.sidebar:
     st.markdown("###  :material/person: Concepteurs")
@@ -146,114 +200,7 @@ titre=st.columns([1, 6])
 with titre[0]:
     st.image("Logo.png", width=150)
 with titre[1]:
-# Enhanced Header with ISSEA branding
-    st.markdown("""
-    <div style='background: linear-gradient(90deg, #1e3a5f 0%, #2c5282 100%); 
-                padding: 1rem 2rem; 
-                border-bottom: 4px solid #f39c12;
-                margin-bottom: 2rem;'>
-        <div style='display: flex; align-items: center; justify-content: space-between;'>
-            <div style='color: white;'>
-                <h1 style='margin: 0; font-size: 1.2rem; font-weight: 500;'>
-                    EVALUATION DES ENSEIGNANTS DE LA FORMATION INITIALE
-                </h1>
-                <h3 style='margin: 0; font-size: 1.2rem; font-weight: 300;'>
-                    ISSEA : Institut Sous-régional de Statistique et d'Economie Appliquée
-                </h3>
-            </div>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
-
-
-
-st.markdown("""
-    <style>
-        .stMarkdown {font-family: 'Helvetica', sans-serif;}
-        .stButton button {
-            background-color: #0066cc;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            border: none;
-            transition: background-color 0.3s;
-        }
-        .stButton button:hover {
-            background-color: #0052a3;
-        }
-        .stRadio > label {
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        .stExpander {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            margin: 10px 0;
-            border: 1px solid #dee2e6;
-        }
-        .stTextInput input {
-            border-radius: 5px;
-            border: 2px solid #e9ecef;
-        }
-        h1 {
-            color: #1e3d59;
-            text-align: center;
-            padding: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-        .stSidebar {
-            background-color: #f1f3f5;
-            padding: 20px;
-        }
-        .stExpander {
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-        .stExpander:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
-        }
-        .stButton button {
-            transition: all 0.3s ease;
-        }
-        .stButton button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .stRadio > div {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-            transition: background-color 0.2s;
-        }
-        .stRadio > div:hover {
-            background-color: #e9ecef;
-        }
-        .stTextInput input:focus {
-            border-color: #0066cc;
-            box-shadow: 0 0 0 2px rgba(0,102,204,0.2);
-        }
-        
-        /* Progress bar styling */
-        .progress-container {
-            background-color: #e9ecef;
-            border-radius: 10px;
-            padding: 1rem;
-            margin: 1rem 0;
-        }
-        
-        /* Table styling */
-        .dataframe {
-            font-size: 14px;
-        }
-        
-        /* Success/Error message styling */
-        .stSuccess, .stError, .stInfo {
-            border-radius: 8px;
-            padding: 1rem;
-        }
-    </style>
-""", unsafe_allow_html=True)
+    pass
 
 # Initialize Excel file and load data
 initialize_data_excel()
@@ -262,7 +209,6 @@ liste_etudiant = pd.read_excel("Base.xlsx", sheet_name="Liste")
 data = pd.read_excel('Base.xlsx', sheet_name="Classification")
 
 dico_etudiant = liste_etudiant.set_index('Matricule').T.to_dict('list')
-
 # Create nested dictionary for classes, teachers, and courses
 nested_dict = {}
 for _, row in data.iterrows():
@@ -352,7 +298,7 @@ pre_nom = st.session_state.authenticated_student['prenom']
 if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe != "":
     
     # Get list of teachers for selected class
-    teachers_list = list(nested_dict[classe_selectionnee].items())
+    teachers_list = data[data['Classe'] == classe_selectionnee][['Enseignant', 'Cours']].values.tolist()
     total_teachers = len(teachers_list)
     
     # Progress section

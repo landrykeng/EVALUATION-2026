@@ -53,6 +53,12 @@ student_eval, data_eval = load_data_from_excel()
 
 st.markdown("""
     <style>
+
+        /* Masquer les éléments par défaut */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        
         .stTabs [data-baseweb="tab-list"] {
             gap: 20px;
             background-color: #f8f9fa;
