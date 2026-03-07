@@ -135,10 +135,10 @@ def save_evaluation_to_excel(evaluation_data, student_data):
 
 
 with st.sidebar:
-    st.markdown("### :material/clipboard: Navigation")
-    st.markdown("- [Dashboard](Dashboard) :bar_chart:")
-    st.markdown("- [Formulaire d'évaluation](Evaluation) :pencil2:")
-    st.markdown("- [Analyse des résultats](Analyse) :mag_right:")
+    st.markdown("### :material/person: Concepteurs")
+    st.write("- **Landry KENGNE**, *ISE 3*")
+    st.write("- **Marc ABENA**, *ISE L3*")
+    st.write("- **Kintin EBALA**, *ISE L2*")
 
 titre=st.columns([1, 6])
 with titre[0]:
