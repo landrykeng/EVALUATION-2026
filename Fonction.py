@@ -18,8 +18,8 @@ import os
 from datetime import datetime, timedelta
 from supabase import create_client, Client
 
-SUPABASE_URL = "https://pjjcxvpfhewnbwuvmhpe.supabase.co"
-SUPABASE_API = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqamN4dnBmaGV3bmJ3dXZtaHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4NzE5MjcsImV4cCI6MjA4ODQ0NzkyN30.VwSd8rWXO2eO5NTvXBxQD9YLjh4xo4lOcrTkma8Z9lc"
+SUPABASE_URL = st.secrets["URL_SUPABASE"]
+SUPABASE_API = st.secrets["API_SUPABASE"]
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_API)
 
 def hash_password(password):

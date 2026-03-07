@@ -83,7 +83,7 @@ if data_eval.empty or student_eval.empty:
     st.info("Les données seront chargées automatiquement une fois que les étudiants complètent leurs évaluations.")
     st.stop()
 
-API_KEY="AIzaSyBaqxn55DNlhojEBtGufpeYdMhfPUT_YUw"
+API_KEY=st.secrets["API_IA"]
 # Configuration des questions et couleurs
 question_dict = {
     "Q_01": "GLOBALEMENT, ÊTES-VOUS SATISFAIT DE L'ENSEIGNANT ?",
