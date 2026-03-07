@@ -133,6 +133,13 @@ def save_evaluation_to_excel(evaluation_data, student_data):
         st.error(f"Erreur lors de la sauvegarde: {e}")
         return False
 
+
+with st.sidebar:
+    st.markdown("### :material/clipboard: Navigation")
+    st.markdown("- [Dashboard](Dashboard) :bar_chart:")
+    st.markdown("- [Formulaire d'évaluation](Evaluation) :pencil2:")
+    st.markdown("- [Analyse des résultats](Analyse) :mag_right:")
+
 titre=st.columns([1, 6])
 with titre[0]:
     st.image("Logo.png", width=150)
