@@ -135,10 +135,12 @@ def save_evaluation_to_excel(evaluation_data, student_data):
 
 
 with st.sidebar:
-    st.markdown("### <span style='color: #1e3a5f;'> :material/person: Concepteurs</span>", unsafe_allow_html=True)
+    st.markdown("###  :material/person: Concepteurs")
     st.write("- **Landry KENGNE**, *ISE 3*")
     st.write("- **Marc ABENA**, *ISE L3*")
     st.write("- **Kintin EBALA**, *ISE L2*")
+    
+    st.info(" *Pour tout problème, veuillez contacter Marc ABENA de ISE L3.*")
 
 titre=st.columns([1, 6])
 with titre[0]:
