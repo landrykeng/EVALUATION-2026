@@ -301,9 +301,11 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
     teachers_list = data[data['Classe'] == classe_selectionnee][['Enseignant', 'Cours']].values.tolist()
     total_teachers = len(teachers_list)
     
+    
     # Progress section
     st.write("---")
     st.write("### :material/trending_up: Progression de vos évaluations")
+    
     
     # Calculate evaluated and remaining teachers
     evaluated_count = user_df.shape[0]
@@ -313,6 +315,11 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
     progress = evaluated_count / total_teachers if total_teachers > 0 else 0
     st.progress(progress)
     st.write(f"**{evaluated_count}/{total_teachers}** enseignants évalués ({progress*100:.0f}%)")
+    
+    
+    st.write(f"Longueur : {len(teachers_list)}")
+    
+    teachers_list
     
     # Display tables in two columns
     col1, col2 = st.columns(2)

@@ -302,10 +302,11 @@ with ligne2[0]:
             if not data_teacher.empty:
                 dict_teacher = {}
                 for classe in data_teacher["Classe"].unique():
+                    data_teach=data_teacher[data_teacher["Classe"]==classe]
                     responses = []
                     for q in [f"Q_{i:02d}" for i in range(1, 19)]:
-                        if q in data_teacher.columns:
-                            responses.extend(data_teacher[q].tolist())
+                        if q in data_teach.columns:
+                            responses.extend(data_teach[q].tolist())
                     
                     counter = pd.Series(responses).value_counts()
                     for rep in ["Très satisfait", "Satisfait", "Moyen", "Mauvais"]:
