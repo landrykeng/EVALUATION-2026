@@ -317,10 +317,6 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
     st.write(f"**{evaluated_count}/{total_teachers}** enseignants évalués ({progress*100:.0f}%)")
     
     
-    st.write(f"Longueur : {len(teachers_list)}")
-    
-    teachers_list
-    
     # Display tables in two columns
     col1, col2 = st.columns(2)
     

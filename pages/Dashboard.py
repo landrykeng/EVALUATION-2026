@@ -162,7 +162,7 @@ try:
         class_progress=class_progress.rename(columns={"Nombre de matières": "Total evaluation", "Nombre de matières évaluées": "Total évaluées"})
         class_progress["Progression"] = class_progress["Total évaluées"] / class_progress["Total evaluation"]
         class_progress=class_progress[["Classe", "Total evaluation", "Total évaluées", "Progression"]]
-        class_progress=class_progress.sort_values(by="Progression", ascending=False)
+        class_progress=class_progress.sort_values(by="Total évaluées", ascending=False)
         colors_palette_class = [f"rgb({int(0)}, {int(1 + i*10)}, {int(255)})" for i in range(len(class_progress))]
         
         make_multi_progress_bar(labels=class_progress["Classe"], values=class_progress["Progression"], 
