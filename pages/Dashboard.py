@@ -161,7 +161,7 @@ try:
         class_progress = class_progress.reset_index(drop=True)
         class_progress=class_progress.rename(columns={"Nombre de matières": "Total evaluation", "Nombre de matières évaluées": "Total évaluées"})
         
-        class_progress=class_progress.sort_values(by="Total évaluées", ascending=False)
+        #class_progress=class_progress.sort_values(by="Total évaluées", ascending=False)
         
         class_progress["Progression"] = class_progress["Total évaluées"] / class_progress["Total evaluation"]
         class_progress=class_progress[["Classe", "Total evaluation", "Total évaluées", "Progression"]]
