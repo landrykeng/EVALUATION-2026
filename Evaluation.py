@@ -250,7 +250,7 @@ if not st.session_state.student_authenticated:
             st.error("⚠️ Veuillez entrer votre matricule")
         else:
             try:
-                matricule_int = auth_matricule
+                matricule_int = int(auth_matricule)
                 if matricule_int not in dico_etudiant:
                     st.error("⚠️ Votre matricule n'est pas valide. Veuillez vérifier sur la fiche de présence de votre classe.")
                 else:
@@ -485,7 +485,7 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
                         st.success(f"✅ Évaluation de **{enseignant_selectionne}** soumise avec succès!")
                         
                         # Check if all teachers evaluated
-                        if len(st.session_state.evaluated_teachers) == total_teachers:
+                        if progress >= 1.0:
                             st.balloons()
                             st.success(f"🎉 Félicitations {pre_nom}! Vous avez terminé toutes vos évaluations!")
                             st.info("Vous pouvez maintenant fermer cette fenêtre.")
