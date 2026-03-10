@@ -485,7 +485,7 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
                         st.success(f"✅ Évaluation de **{enseignant_selectionne}** soumise avec succès!")
                         
                         # Check if all teachers evaluated
-                        if len(st.session_state.evaluated_teachers) == total_teachers:
+                        if progress >= 1.0:
                             st.balloons()
                             st.success(f"🎉 Félicitations {pre_nom}! Vous avez terminé toutes vos évaluations!")
                             st.info("Vous pouvez maintenant fermer cette fenêtre.")
