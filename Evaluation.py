@@ -251,7 +251,7 @@ if not st.session_state.student_authenticated:
         else:
             try:
                 matricule_int = auth_matricule
-                if matricule_int not in dico_etudiant or int(matricule_int) not in dico_etudiant:
+                if matricule_int not in dico_etudiant:
                     st.error("⚠️ Votre matricule n'est pas valide. Veuillez vérifier sur la fiche de présence de votre classe.")
                 else:
                     # Vérifier si l'étudiant a déjà complété ses évaluations
