@@ -349,7 +349,7 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
     st.write("---")
     
     # Select teacher to evaluate
-    if remaining_teachers:
+    if progress < 1.0:
         st.write("### :material/check_circle: Sélectionnez un enseignant à évaluer")
         
         teacher_options = [f"{ens} - {cours}" for ens, cours in remaining_teachers]
