@@ -323,19 +323,17 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
     with col1:
         st.write("#### ✅ Enseignants déjà évalués")
         if st.session_state.evaluated_teachers:
-            evaluated_df = pd.DataFrame([
-                {"Enseignant": ens, "Cours": nested_dict[classe_selectionnee][ens]}
-                for ens in user_df["enseignant"].unique() if ens in user_df["enseignant"].unique()
-            ])
+            evaluated_df=user_df[["enseignant","cours"]]
             st.dataframe(evaluated_df, hide_index=True, use_container_width=True)
         else:
             st.info("Aucun enseignant évalué pour le moment")
     
     with col2:
         st.write("#### :material/hourglass_top: Enseignants restants à évaluer")
+        list_evaluated=[ens + "-" + cours for ens, cours in zip(user_df["enseignant"], user_df["cours"])]
         remaining_teachers = [
             (ens, cours) for ens, cours in teachers_list 
-            if ens not in user_df["enseignant"].unique()
+            if ens + "-" + cours not in list_evaluated
         ]
         if remaining_teachers:
             remaining_df = pd.DataFrame([
