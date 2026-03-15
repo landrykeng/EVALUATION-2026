@@ -170,7 +170,78 @@ try:
         
         make_multi_progress_bar(labels=class_progress["Classe"], values=class_progress["Progression"], 
                                titre="Progression par classe", colors=colors_palette_class, height=400)
+    
+    
+    #---------------Evolution de la progression globale dans le temps----------------
+    student_eval["Date"] = pd.to_datetime(student_eval["created_at"]).dt.date
+    df_line = student_eval.groupby("Date").agg({"matricule": "count"})
+    df_line = df_line.rename(columns={"matricule": "Total_evaluated"})
+    df_line = df_line.reset_index()
+    df_line["Progression"] = df_line["Total_evaluated"].cumsum() / df_all["Nombre de matières"].sum()
+    df_line["day_part"]=df_line["Total_evaluated"]/ df_all["Nombre de matières"].sum()
+    
+    lng=st.columns(2)
+    with lng[0]:
+        echart_options = {
+                "title": {"text": "Évolution de la progression globale dans le temps"},
+                "tooltip": {"trigger": "axis"},
+                "xAxis": {
+                    "type": "category",
+                    "data": df_line["Date"].astype(str).tolist(),
+                    "name": "Date"
+                },
+                "yAxis": {
+                    "type": "value",
+                    "name": "Progression cumulée"
+                },
+                "series": [
+                    {
+                        "data": (df_line["Progression"]*100).round(2).tolist(),
+                        "type": "line",
+                        "smooth": True,
+                        "name": "Progression (%)"
+                    }
+                ],
+                "grid": {
+                    "left": 60,
+                    "right": 30,
+                    "top": 60,
+                    "bottom": 60
+                }
+            }
+        st_echarts(options=echart_options, height="400px")
+    with lng[1]:
+        echart_options = {
+                "title": {"text": "Part des évaluations journalière"},
+                "tooltip": {"trigger": "axis"},
+                "xAxis": {
+                    "type": "category",
+                    "data": df_line["Date"].astype(str).tolist(),
+                    "name": "Date"
+                },
+                "yAxis": {
+                    "type": "value",
+                    "name": "Proportion d'évaluations journalières"
+                },
+                "series": [
+                    {
+                        "data": (df_line["day_part"]*100).round(2).tolist(),
+                        "type": "line",
+                        "smooth": False,
+                        "name": "charge journalière (%)",
+                        "color": "#F0350B"  # Choisissez la couleur désirée (exemple: orange)
+                    }
+                ],
+                "grid": {
+                    "left": 60,
+                    "right": 30,
+                    "top": 60,
+                    "bottom": 60
+                }
+            }
+        st_echarts(options=echart_options, height="400px", key="line_chart_day_part")
         
+      
     # tableau croisé de toutes les reponses par modalité
     cross_all = pd.DataFrame()
     for q in [f"Q_{i:02d}" for i in range(1, 19)]:
@@ -185,6 +256,7 @@ try:
         cross_all[col] = round(100 * cross_all[col] / cross_all[col].sum(), 2)
     cross_all = cross_all.T
     cl=st.columns(2)
+    
     with cl[0]:
         make_st_heatmap_echat2(cross_all, cle="heatmap_overview2", title="Distribution globale (%) des réponses par question")
         labels_df = pd.DataFrame(list(question_dict.items()), columns=['Code', 'Question'])
