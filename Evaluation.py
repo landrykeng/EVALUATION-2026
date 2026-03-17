@@ -355,7 +355,7 @@ if classe_selectionnee != "" and nom_etudiant != "" and matricule != "" and sexe
         
         # Extract teacher name and course
         enseignant_selectionne = selected_teacher_full.split(" - ")[0]
-        cours_selectionne = nested_dict[classe_selectionnee][enseignant_selectionne]
+        cours_selectionne = selected_teacher_full.split(" - ")[1]
         
         st.write("---")
         st.write(f"### Évaluation de <span style='color: #0066cc;'>**{enseignant_selectionne}**</span> pour le cours de <span style='color: #f39c12;'>*{cours_selectionne}*</span>", unsafe_allow_html=True)
